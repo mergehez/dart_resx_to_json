@@ -1,4 +1,4 @@
-RESX to JSON converter. 
+RESX to JSON converter.  [![Pub Package](https://img.shields.io/pub/v/resx_to_json.svg)](https://pub.dev/packages/resx_to_json)
 
 While migration from Xamarin Forms to Flutter, you'd probably want to convert your localization files to json. This package is the perfect tool for it.
 
