@@ -22,7 +22,7 @@ class Config {
   static const String keyExtension = "extension";
   static const String keyJsonKeysPath = "json_keys_path";
 
-  static const String defaultJsonKeysPath = "lib/helper/json_keys.dart";
+  static const String defaultJsonKeysPath = "lib/helpers/json_keys.dart";
 
   final String source, destination, ext, jsonKeysPath;
   final bool sort;
