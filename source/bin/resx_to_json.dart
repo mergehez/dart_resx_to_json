@@ -20,12 +20,15 @@ class Config {
   static const String keySort = "sort";
   static const String keyReplacements = "replacements";
   static const String keyExtension = "extension";
+  static const String keyJsonKeysPath = "json_keys_path";
 
-  final String source, destination, ext;
+  static const String defaultJsonKeysPath = "lib/helper/json_keys.dart";
+
+  final String source, destination, ext, jsonKeysPath;
   final bool sort;
   final Map<String, String> replacements;
 
-  Config(this.source, this.destination, this.sort, this.ext, this.replacements);
+  Config(this.source, this.destination, this.sort, this.ext, this.replacements, this.jsonKeysPath);
 }
 
 void convert() {
@@ -102,6 +105,20 @@ void convert() {
     }
   }
 
+  try {
+    final file = File(config.jsonKeysPath);
+    if (file.existsSync() && !file.readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
+      printExit(
+          '`${config.jsonKeysPath}` was either created by you manually or modified after being created by resx_to_json. Please delete the file and try again!');
+    }
+    file.createSync(recursive: true);
+
+    var jsonKeysFileContent = Utils.createJsonKeysFileContent(config, allKeys);
+    file.writeAsStringSync(jsonKeysFileContent);
+  } on FileSystemException catch (e) {
+    printExit("The class for json keys couldn't be created. Error: `$e`");
+  }
+
   final List<String> finalFileNames = [];
   for (var mapEntry in fileMap.entries) {
     String name = mapEntry.key;
@@ -168,6 +185,22 @@ class Utils {
     if (!config.containsKey(Config.keyDestination)) {
       printExit('Your `resx_to_json` section does not contain `${Config.keyDestination}`.');
     }
+
+    if (!config.containsKey(Config.keyJsonKeysPath) &&
+        File(Config.defaultJsonKeysPath).existsSync() &&
+        !File(Config.defaultJsonKeysPath).readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
+      printExit(
+          'Your `resx_to_json` section does not contain `${Config.keyJsonKeysPath}` and the default path `${Config.defaultJsonKeysPath}` already exists. Please either define a custom path or rename/delete the existing file.');
+    }
+    if (config.containsKey(Config.keyJsonKeysPath) && File(config[Config.keyJsonKeysPath].toString()).existsSync()) {
+      printExit(
+          'The file path defined in `${Config.keyJsonKeysPath}` in the `resx_to_json` section already exists! Please either define another path or rename/delete the existing file.');
+    }
+    var locKeysPath = config[Config.keyJsonKeysPath]?.toString() ?? Config.defaultJsonKeysPath;
+
+    // File(locKeysPath).createSync(recursive: true);
+    // printExit('success: file doesn\'t exist: ${locKeysPath}');
+
     bool sort = true;
     if (config.containsKey(Config.keySort)) {
       final sortStr = config[Config.keySort].toString();
@@ -191,7 +224,7 @@ class Utils {
 
     final ext = config[Config.keyExtension] ?? "json";
 
-    return Config(config[Config.keySource], config[Config.keyDestination], sort, ext, replacements);
+    return Config(config[Config.keySource], config[Config.keyDestination], sort, ext, replacements, locKeysPath);
   }
 
   static Map<String, String> readXML(String filePath) {
@@ -220,5 +253,132 @@ class Utils {
     } catch (_, __) {
       printExit("The file `$filePath` is not a valid .resx document.");
     }
+  }
+
+  static String createJsonKeysFileContent(Config config, List<String> allKeys) {
+    var className = Utils.convertSnakeCaseToPascalCase(File(config.jsonKeysPath).uri.pathSegments.last);
+    final preservedDartKeywords = [
+      'abstract',
+      'as',
+      'assert',
+      'async',
+      'await',
+      'break',
+      'case',
+      'catch',
+      'class',
+      'const',
+      'continue',
+      'covariant',
+      'default',
+      'deferred',
+      'do',
+      'dynamic',
+      'else',
+      'enum',
+      'export',
+      'extends',
+      'extension',
+      'external',
+      'factory',
+      'false',
+      'final',
+      'finally',
+      'for',
+      'function',
+      'get',
+      'hide',
+      'if',
+      'implements',
+      'import',
+      'in',
+      'interface',
+      'is',
+      'late',
+      'library',
+      'mixin',
+      'new',
+      'null',
+      'on',
+      'operator',
+      'part',
+      'required',
+      'rethrow',
+      'return',
+      'set',
+      'show',
+      'static',
+      'super',
+      'switch',
+      'sync',
+      'this',
+      'throw',
+      'true',
+      'try',
+      'typedef',
+      'var',
+      'void',
+      'while',
+      'with',
+      'yield'
+    ];
+
+    var strBuilderKeys = StringBuffer();
+    strBuilderKeys.writeln('// resx_to_json: auto-generated (Do not modify this line or the package won\'t update this file!)');
+    strBuilderKeys.writeln('// ignore_for_file: constant_identifier_names, unused_field');
+    strBuilderKeys.writeln('');
+    strBuilderKeys.writeln('class $className {');
+    strBuilderKeys.writeln('  const $className._();');
+    strBuilderKeys.writeln('');
+
+    if (config.sort) {
+      allKeys.sort();
+    }
+
+    for (var key in allKeys) {
+      var propName = key.replaceAll(RegExp(r'[^\w_$]'), '_');
+      if (propName.startsWith(RegExp(r'[0-9]')) || preservedDartKeywords.contains(propName)) {
+        propName = "_" + propName;
+      }
+      if (!key.contains("'")) {
+        key = "'$key'";
+      } else if (!key.contains('"')) {
+        key = '"$key"';
+      } else {
+        printExit('the key `$key` cannot have both single and double quotes in it!');
+      }
+
+      strBuilderKeys.writeln('  static const String $propName = "$key";');
+    }
+
+    strBuilderKeys.write("}");
+
+    return strBuilderKeys.toString();
+  }
+
+  static final RegExp _caseConvertUpperAlphaRegex = RegExp(r'[A-Z]');
+  static final caseConvertSymbolSet = {' ', '.', '/', '_', '\\', '-'};
+  static String convertSnakeCaseToPascalCase(String text) {
+    StringBuffer sb = StringBuffer();
+    bool isAllCaps = text.toUpperCase() == text;
+    bool nextUppercase = true;
+
+    for (int i = 0; i < text.length; i++) {
+      String char = text[i];
+      String? nextChar = i + 1 == text.length ? null : text[i + 1];
+
+      if (caseConvertSymbolSet.contains(char)) {
+        continue;
+      }
+
+      sb.write(nextUppercase ? char.toUpperCase() : char);
+
+      bool isEndOfWord =
+          nextChar == null || (_caseConvertUpperAlphaRegex.hasMatch(nextChar) && !isAllCaps) || caseConvertSymbolSet.contains(nextChar);
+
+      nextUppercase = isEndOfWord;
+    }
+
+    return sb.toString();
   }
 }
