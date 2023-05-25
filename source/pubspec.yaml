@@ -1,6 +1,6 @@
 name: resx_to_json
 description: Helps you to convert RESX files to JSON. You would want to use it during migration from Xamarin to Flutter.
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/mergehez/dart_resx_to_json
 
 environment:
