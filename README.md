@@ -30,6 +30,9 @@ resx_to_json:
   # The extension for the generated json files. For example `arb`. (Optional, default: 'json')
   extension: json
 
+  # The file where all keys in resx files are written as static properties. (Optional, default: 'lib/helpers/json_keys.dart')
+  json_keys_path: lib/utils/json_keys.dart
+
   # Regex patterns for renaming resx files. (Optional)
   # Notice that the search is case-sensitive
   # <regex_pattern> => <replacement> 
