@@ -256,7 +256,7 @@ class Utils {
   }
 
   static String createJsonKeysFileContent(Config config, List<String> allKeys) {
-    var className = Utils.convertSnakeCaseToPascalCase(File(config.jsonKeysPath).uri.pathSegments.last);
+    var className = Utils.convertSnakeCaseToPascalCase(File(config.jsonKeysPath).uri.pathSegments.last.split('.').first);
     final preservedDartKeywords = [
       'abstract',
       'as',
