@@ -1,6 +1,6 @@
 ## 0.0.1
 
-* Initial release.
+* Initial release: Converts .resx files to .json files.
 
 ## 0.0.2
 
