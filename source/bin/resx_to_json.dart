@@ -192,7 +192,9 @@ class Utils {
       printExit(
           'Your `resx_to_json` section does not contain `${Config.keyJsonKeysPath}` and the default path `${Config.defaultJsonKeysPath}` already exists. Please either define a custom path or rename/delete the existing file.');
     }
-    if (config.containsKey(Config.keyJsonKeysPath) && File(config[Config.keyJsonKeysPath].toString()).existsSync()) {
+    if (config.containsKey(Config.keyJsonKeysPath) &&
+        File(config[Config.keyJsonKeysPath].toString()).existsSync() &&
+        !File(Config.defaultJsonKeysPath).readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
       printExit(
           'The file path defined in `${Config.keyJsonKeysPath}` in the `resx_to_json` section already exists! Please either define another path or rename/delete the existing file.');
     }
