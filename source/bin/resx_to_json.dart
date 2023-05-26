@@ -107,10 +107,10 @@ void convert() {
 
   try {
     final file = File(config.jsonKeysPath);
-    if (file.existsSync() && !file.readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
-      printExit(
-          '`${config.jsonKeysPath}` was either created by you manually or modified after being created by resx_to_json. Please delete the file and try again!');
-    }
+    // if (file.existsSync() && !file.readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
+    //   printExit(
+    //       '`${config.jsonKeysPath}` was either created by you manually or modified after being created by resx_to_json. Please delete the file and try again!');
+    // }
     file.createSync(recursive: true);
 
     var jsonKeysFileContent = Utils.createJsonKeysFileContent(config, allKeys);
@@ -186,18 +186,18 @@ class Utils {
       printExit('Your `resx_to_json` section does not contain `${Config.keyDestination}`.');
     }
 
-    if (!config.containsKey(Config.keyJsonKeysPath) &&
-        File(Config.defaultJsonKeysPath).existsSync() &&
-        !File(Config.defaultJsonKeysPath).readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
-      printExit(
-          'Your `resx_to_json` section does not contain `${Config.keyJsonKeysPath}` and the default path `${Config.defaultJsonKeysPath}` already exists. Please either define a custom path or rename/delete the existing file.');
-    }
-    if (config.containsKey(Config.keyJsonKeysPath) &&
-        File(config[Config.keyJsonKeysPath].toString()).existsSync() &&
-        !File(Config.defaultJsonKeysPath).readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
+    if (!config.containsKey(Config.keyJsonKeysPath)) {
+      if (File(Config.defaultJsonKeysPath).existsSync() &&
+          !File(Config.defaultJsonKeysPath).readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
+        printExit(
+            'Your `resx_to_json` section does not contain `${Config.keyJsonKeysPath}` and the default path `${Config.defaultJsonKeysPath}` already exists. Please either define a custom path or rename/delete the existing file.');
+      }
+    } else if (File(config[Config.keyJsonKeysPath].toString()).existsSync() &&
+        !File(config[Config.keyJsonKeysPath].toString()).readAsLinesSync().first.startsWith("// resx_to_json: auto-generated")) {
       printExit(
           'The file path defined in `${Config.keyJsonKeysPath}` in the `resx_to_json` section already exists! Please either define another path or rename/delete the existing file.');
     }
+
     var locKeysPath = config[Config.keyJsonKeysPath]?.toString() ?? Config.defaultJsonKeysPath;
 
     // File(locKeysPath).createSync(recursive: true);
