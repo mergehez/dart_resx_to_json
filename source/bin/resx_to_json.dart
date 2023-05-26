@@ -348,7 +348,7 @@ class Utils {
         printExit('the key `$key` cannot have both single and double quotes in it!');
       }
 
-      strBuilderKeys.writeln('  static const String $propName = "$key";');
+      strBuilderKeys.writeln('  static const String $propName = $key;');
     }
 
     strBuilderKeys.write("}");
